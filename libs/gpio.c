@@ -9,14 +9,14 @@ void gpio_init(LEDFunctions type) {
 
     switch (led_type) {
         case LED_STANDARD: {
-            GPIOA->CFGHR = GPIO_CFGHR_MODE15_1;     // PA15: 2 MHz, push-pull
+            GPIOA->CFGHR |= GPIO_CFGHR_MODE15_1;     // PA15: 2 MHz, push-pull
                                                     // output
 
             break;
         }
 
         case LED_PWM: {
-            GPIOA->CFGHR = GPIO_CFGHR_CNF15_1 | GPIO_CFGHR_MODE15_1;
+            GPIOA->CFGHR |= GPIO_CFGHR_CNF15_1 | GPIO_CFGHR_MODE15_1;
                     // PA15: 2 MHz, push-pull alternate output
 
             pwm_init();

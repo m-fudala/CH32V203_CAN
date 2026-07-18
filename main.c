@@ -18,6 +18,8 @@ volatile unsigned char led_state = 0;
 void button_handler(void) {
     led_state = !led_state;
     set_led_state(led_state);
+
+    can_send();
 }
 
 void timer_handler(void) {
