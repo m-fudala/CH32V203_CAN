@@ -69,14 +69,36 @@ void can_send(unsigned int id, unsigned char id_type, unsigned char dlc,
         if (byte < 4) {
             CAN1->sTxMailBox[mailbox].TXMDLR |= data[byte] << (8 * byte);
         } else {
-            CAN1->sTxMailBox[mailbox].TXMDHR |= data[byte] << (8 * byte);
+            CAN1->sTxMailBox[mailbox].TXMDHR |= data[byte] << (8 * (byte - 4));
         }
     }
 
     // request sending
-    CAN1->sTxMailBox[mailbox].TXMIR |= CAN_TXMI0R_TXRQ;
-    while (!(CAN1->TSTATR & CAN_TSTATR_TXOK0));
+    CAN1->sTxMailBox[mailbox].TXMIR |= 1;
 
-    // clear transmision flags
-    CAN1->TSTATR |= CAN_TSTATR_TXOK0 | CAN_TSTATR_RQCP0;
+    switch (mailbox) {
+        case 0:
+            while (!(CAN1->TSTATR & CAN_TSTATR_TXOK0));
+
+            // clear transmision flags
+            CAN1->TSTATR |= CAN_TSTATR_TXOK0 | CAN_TSTATR_RQCP0;
+
+            break;
+
+        case 1:
+            while (!(CAN1->TSTATR & CAN_TSTATR_TXOK1));
+
+            // clear transmision flags
+            CAN1->TSTATR |= CAN_TSTATR_TXOK1 | CAN_TSTATR_RQCP1;
+
+            break;
+
+        case 2:
+            while (!(CAN1->TSTATR & CAN_TSTATR_TXOK2));
+
+            // clear transmision flags
+            CAN1->TSTATR |= CAN_TSTATR_TXOK2 | CAN_TSTATR_RQCP2;
+
+            break;
+    }
 }
