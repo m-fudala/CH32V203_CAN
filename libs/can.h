@@ -11,6 +11,6 @@
 
 void can_init(void);
 
-void can_send(void);
+void can_send(unsigned int id, unsigned char dlc, char data[]);
 
 #endif 

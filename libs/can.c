@@ -28,22 +28,40 @@ void can_init(void) {
     while (CAN1->STATR & CAN_STATR_INAK);
 }
 
-void can_send(void) {
-    // standard ID 0x15 data frame
-    CAN1->sTxMailBox[0].TXMIR = 0x15 << 21;
-    CAN1->sTxMailBox[0].TXMIR &= ~(CAN_TXMI0R_IDE | CAN_TXMI0R_RTR);
+void can_send(unsigned int id, unsigned char dlc, char data[]) {
+    // determine first empty mailbox for transmitting
+    unsigned char mailbox;
 
-    // don't send timestamp, DLC of 8
-    CAN1->sTxMailBox[0].TXMDTR &= ~CAN_TXMDT0R_TGT;
-    CAN1->sTxMailBox[0].TXMDTR |= 8;
+    if (CAN1->TSTATR & CAN_TSTATR_TME0) {
+        mailbox = 0;
+    } else if (CAN1->TSTATR & CAN_TSTATR_TME1) {
+        mailbox = 1;
+    } else {
+        mailbox = 2;
+    }
 
-    CAN1->sTxMailBox[0].TXMDHR = 0x88 << 24 | 0x77 << 16 |
-            0x66 << 8 | 0x55;
-    CAN1->sTxMailBox[0].TXMDLR = 0x44 << 24 | 0x33 << 16 |
-            0x22 << 8 | 0x11;
+    // standard ID data frame, TODO: handle extended IDs
+    CAN1->sTxMailBox[mailbox].TXMIR = id << 21;
+    CAN1->sTxMailBox[mailbox].TXMIR &= ~(CAN_TXMI0R_IDE | CAN_TXMI0R_RTR);
+
+    // don't send timestamp, set DLC
+    CAN1->sTxMailBox[mailbox].TXMDTR &= ~CAN_TXMDT0R_TGT;
+    CAN1->sTxMailBox[mailbox].TXMDTR |= dlc;
+
+    // write data to registers
+    CAN1->sTxMailBox[mailbox].TXMDLR = 0;
+    CAN1->sTxMailBox[mailbox].TXMDHR = 0;
+
+    for (unsigned char byte = 0; byte < dlc; ++byte) {
+        if (byte < 4) {
+            CAN1->sTxMailBox[mailbox].TXMDLR |= data[byte] << (8 * byte);
+        } else {
+            CAN1->sTxMailBox[mailbox].TXMDHR |= data[byte] << (8 * byte);
+        }
+    }
 
     // request sending
-    CAN1->sTxMailBox[0].TXMIR |= CAN_TXMI0R_TXRQ;
+    CAN1->sTxMailBox[mailbox].TXMIR |= CAN_TXMI0R_TXRQ;
     while (!(CAN1->TSTATR & CAN_TSTATR_TXOK0));
 
     // clear transmision flags
