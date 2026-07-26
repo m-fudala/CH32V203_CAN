@@ -10,7 +10,7 @@ STARTUP_NAME = startup_ch32v20x_D6.S
 
 OBJCOPYFLAGS = -O ihex
 
-flash: main.hex
+flash: clean main.hex
 	wlink erase && wlink flash main.hex -v
 
 clean:

@@ -28,7 +28,9 @@ void can_init(void) {
     while (CAN1->STATR & CAN_STATR_INAK);
 }
 
-void can_send(unsigned int id, unsigned char dlc, char data[]) {
+void can_send(unsigned int id, unsigned char id_type, unsigned char dlc,
+        char data[]) {
+
     // determine first empty mailbox for transmitting
     unsigned char mailbox;
 
@@ -40,9 +42,20 @@ void can_send(unsigned int id, unsigned char dlc, char data[]) {
         mailbox = 2;
     }
 
-    // standard ID data frame, TODO: handle extended IDs
-    CAN1->sTxMailBox[mailbox].TXMIR = id << 21;
-    CAN1->sTxMailBox[mailbox].TXMIR &= ~(CAN_TXMI0R_IDE | CAN_TXMI0R_RTR);
+    // set ID for data frame
+    CAN1->sTxMailBox[mailbox].TXMIR = 0;
+
+    if (!id_type) {
+        // standard ID
+        CAN1->sTxMailBox[mailbox].TXMIR &= ~CAN_TXMI0R_IDE;
+        CAN1->sTxMailBox[mailbox].TXMIR |= id << 21;
+    } else {
+        // extended ID
+        CAN1->sTxMailBox[mailbox].TXMIR |= CAN_TXMI0R_IDE;
+        CAN1->sTxMailBox[mailbox].TXMIR |= id << 3;
+    }
+
+    CAN1->sTxMailBox[mailbox].TXMIR &= ~CAN_TXMI0R_RTR;
 
     // don't send timestamp, set DLC
     CAN1->sTxMailBox[mailbox].TXMDTR &= ~CAN_TXMDT0R_TGT;

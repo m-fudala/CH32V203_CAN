@@ -19,7 +19,7 @@ void button_handler(void) {
     led_state = !led_state;
     set_led_state(led_state);
 
-    can_send(0x100, 6, (char[]){0xAA, 0xBB, 0xCC, 0xDD, 0xEE, 0xFF});
+    can_send(0xBEEF, ID_EXTENDED, 6, (char[]){0xAA, 0xBB, 0xCC, 0xDD, 0xEE, 0xFF});
 }
 
 void timer_handler(void) {
